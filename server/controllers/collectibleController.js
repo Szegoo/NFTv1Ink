@@ -1,7 +1,20 @@
+require("dotenv").config();
 const Collectible = require("../model/Collectible");
+const S3 = require("aws-sdk/clients/s3");
 const jimp = require('jimp');
 const mongoose = require('mongoose');
 const multer = require('multer');
+
+const bucketName = process.env.AWS_BUCKET_NAME;
+const region = process.env.AWS_BUCKET_REGION;
+const accessKeyId = process.env.AWS_ACCESS_KEY
+const secretAccessKey = process.env.AWS_SECRET_KEY;
+
+const s3 = new S3({
+    region,
+    accessKeyId,
+    secretAccessKey
+})
 
 const imageUploadOptions = {
     storage: multer.memoryStorage(),
@@ -23,7 +36,7 @@ exports.resizeImage = async (req, res, next) => {
     if (!req.file) {
         return next();
     }
-    postDate = Date.now();
+    let postDate = Date.now();
     //trazim extension od slike
     //image/extension slike naprimer: jpg, png...;
     const extension = req.file.mimetype.split('/')[1];
@@ -33,6 +46,15 @@ exports.resizeImage = async (req, res, next) => {
     //menjam rezoluciju slike na 500x500px
     await image.resize(500, 500);
     await image.write(`./${req.body.image}`);
+
+    //new part
+
+/*     const uploadParams = {
+        Bucket: bucketName,
+        Body: image,
+        Key = postDate
+    } */
+
     next();
 }; 
 
