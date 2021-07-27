@@ -50,5 +50,5 @@ exports.addCollectible = async(req, res) => {
 		image
 	});
 	await newCollectible.save();
-	res.json(`https://${req.get('host')}/api/nft?id=${id}`);
+	res.json(`http://${req.get('host')}/api/nft?id=${id}`);
 }
