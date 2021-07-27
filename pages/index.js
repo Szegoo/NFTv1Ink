@@ -4,7 +4,7 @@ import axios from 'axios';
 import {ABI} from '../ABI';
 
 const web3 = new Web3(Web3.givenProvider);
-const contractAddress = "0x1967a92090134c60F1C53eE864067315FE6Ef8A0";
+const contractAddress = "0x58c1F6bA4bca01b57Caa84d4AF1CAd1F2d10d713";
 
 export default class Index extends React.PureComponent {
 	state = {
