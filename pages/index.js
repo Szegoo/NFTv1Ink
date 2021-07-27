@@ -61,6 +61,7 @@ export default class Index extends React.PureComponent {
 				</h1>
 				<label htmlFor="image">
 					Postavi sliku svog kolekcionarskog tokena
+					(slike se smanjuju na 500x500px)
 				</label>
 				<input onChange={this.handleChange} name="image" type="file"/>
 				<button onClick={this.createCollectible}>Create</button>
