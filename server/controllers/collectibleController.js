@@ -26,10 +26,11 @@ exports.resizeImage = async (req, res, next) => {
     const file = req.file;
     console.log(file);
     const fileStream = fs.createReadStream(file.path);
+    const extension = file.mimetype.split('/')[1];
     const uploadParams = {
         Bucket: bucketName,
         Body: fileStream,
-        Key: file.filename+".png"
+        Key: file.filename+extension
     } 
     const result = await s3.upload(uploadParams).promise();
     //link od slika u s3 bucket-u
