@@ -19,15 +19,16 @@ const imageUploadOptions = {
 }
 exports.uploadImage = multer(imageUploadOptions).single('image');
 exports.resizeImage = async (req, res, next) => {
-    //multer automatski stavlje req.file
+    //multer automatski stavlja req.file
     if (!req.file) {
         return next();
     }
     postDate = Date.now();
-    //posto ide image/extension slike naprimer: jpg, png...;
+    //trazim extension od slike
+    //image/extension slike naprimer: jpg, png...;
     const extension = req.file.mimetype.split('/')[1];
     postExtension = extension;
-    req.body.image = `/static/${postDate}.${extension}`;
+    req.body.image = `/static/uploads/${postDate}.${extension}`;
     const image = await jimp.read(req.file.buffer);
     //menjam rezoluciju slike na 500x500px
     await image.resize(500, 500);
