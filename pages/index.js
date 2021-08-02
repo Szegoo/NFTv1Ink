@@ -19,11 +19,11 @@ export default class Index extends React.PureComponent {
 		const accounts = await window.ethereum.enable();
 		const account = accounts[0];
 		const NFTContract = new web3.eth.Contract(ABI, contractAddress, {from: account});
-		NFTContract.methods.getLastId().call().then(async lastId => {
+		NFTContract.methods.getLastId().call().then(lastId => {
 			const nextId = Number(lastId) +1;
 			this.collectible.set("id", nextId);
 			let url = `http://nft-app1.herokuapp.com/api/nft?id=${nextId}`
-			NFTContract.methods.createItem(account, url).send().then((response) => {
+			NFTContract.methods.createItem(account, url).send().then(async(response) => {
 				await axios.post("/api/add-nft", this.collectible);
 				console.log(response);
 				//pozivam opet da bi se dodao novi token
