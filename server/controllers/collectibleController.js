@@ -40,13 +40,6 @@ exports.resizeImage = async (req, res, next) => {
 
 exports.addCollectible = async(req, res) => {
 	const {id, image} = req.body;
-    const collectibleWithId = await Collectible.find().where({
-        id
-    });
-    console.log(collectibleWithId);
-    if(collectibleWithId[0]) {
-        return res.status(400).json({"message": "postoji collectible koji ima isti id!"});
-    }
 	const newCollectible = new Collectible({
 		_id: mongoose.Types.ObjectId(),
 		id,
