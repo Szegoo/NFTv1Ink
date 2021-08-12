@@ -1,10 +1,11 @@
 import Web3 from 'web3';
 import React from 'react';
 import axios from 'axios';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import {ABI} from '../ABI';
 
 const web3 = new Web3(Web3.givenProvider);
-const contractAddress = "0x58c1F6bA4bca01b57Caa84d4AF1CAd1F2d10d713";
+const contractAddress = "5GAZJRVujE38NwxxVXNpKFbKyiJ8GomUA4jL1sW2iw6h3CV3";
 
 export default class Index extends React.PureComponent {
 	state = {
@@ -13,40 +14,87 @@ export default class Index extends React.PureComponent {
 	}
 	componentDidMount() {
 		this.collectible = new FormData();
-		this.getCollectibles();
+		this.enable();
 	}
-	createCollectible = async() => {
-		const accounts = await window.ethereum.enable();
-		const account = accounts[0];
-		const NFTContract = new web3.eth.Contract(ABI, contractAddress, {from: account});
-		NFTContract.methods.getLastId().call().then(lastId => {
-			const nextId = Number(lastId) +1;
-			this.collectible.set("id", nextId);
-			let url = `http://nft-app1.herokuapp.com/api/nft?id=${nextId}`
-			NFTContract.methods.createItem(account, url).send().then(async(response) => {
-				await axios.post("/api/add-nft", this.collectible);
-				console.log(response);
-				//pozivam opet da bi se dodao novi token
-				this.getCollectibles();
-			});  
-		});
-	}
-	getCollectibles = async() => {
-		const accounts = await window.ethereum.enable();
-		const account = accounts[0];
-		const NFTContract = new web3.eth.Contract(ABI, contractAddress, {from: account});
-		let collectibles = [];
-		const lastId = await NFTContract.methods.getLastId().call();
- 		for(let i = 1, j=0; i <= lastId; i++) {
-			const ownerOf = await NFTContract.methods.ownerOf(i).call();
-			if(account.toLowerCase() === ownerOf.toLowerCase()) {
-				let url = await NFTContract.methods.tokenURI(i).call();
-				console.log(url);
-				collectibles[j] = (await axios.get(url)).data;
-				j++;
+	enable = async() => {
+		if(window !== undefined) {
+			const ContractPromise = (await import("@polkadot/api-contract")).ContractPromise;
+			const web3Enable = (await import("@polkadot/extension-dapp")).web3Enable;
+			const web3Accounts = (await import("@polkadot/extension-dapp")).web3Accounts;
+			const web3FromAddress = (await import("@polkadot/extension-dapp")).web3FromAddress;
+			const allInjected = await web3Enable('my cool dapp');
+			if(allInjected.length === 0) {
+			return;
 			}
-		} 
-		this.setState({collectibles});
+			const allAccounts = await web3Accounts();
+			let account = allAccounts[0];
+			console.log(allInjected);
+
+			const provider = new WsProvider('ws://127.0.0.1:9944');
+			const api = await ApiPromise.create({ provider });
+			const contract = new ContractPromise(api, ABI, contractAddress);
+
+			var { gasConsumed, result, output } = await contract.query.getLastId(account.address, { value: 0, gasLimit: -1 });
+			console.log(result.toHuman());
+			let collectibles = [];
+			if(result.isOk) {
+			let lastId = output.toHuman();
+			console.log(lastId);
+			for(let i = 1, j=0; i < lastId; i++) {
+					var {gasConsumed, result, output} = await contract.query.ownerOf(account.address, {value: 0, gasLimit: -1},i);
+					if(result.isOk) {
+						console.log(output.toHuman());
+						if(account.address.toLowerCase() === output.toHuman().toLowerCase()) {
+							let url = "http://localhost:3000/api/nft?id="+i;
+							console.log(url);
+							collectibles[j] = (await axios.get(url)).data;
+							j++;
+						}
+					}
+			} 
+			this.setState({lastId});
+			}else {
+				console.log(result.toHuman());
+			}
+			this.setState({collectibles});
+		}
+	}
+	mint = async() => {
+		if(window !== undefined) {
+			const ContractPromise = (await import("@polkadot/api-contract")).ContractPromise;
+			const web3Enable = (await import("@polkadot/extension-dapp")).web3Enable;
+			const web3Accounts = (await import("@polkadot/extension-dapp")).web3Accounts;
+			const web3FromAddress = (await import("@polkadot/extension-dapp")).web3FromAddress;
+			const {lastId} = this.state;
+			const allInjected = await web3Enable('my cool dapp');
+			if(allInjected.length === 0) {
+			return;
+			}
+			console.log(allInjected);
+			const allAccounts = await web3Accounts();
+			let account = allAccounts[0];
+			console.log(allInjected);
+
+			const provider = new WsProvider('ws://127.0.0.1:9944');
+			const api = await ApiPromise.create({ provider });
+			const contract = new ContractPromise(api, ABI, contractAddress);
+			console.log(account);
+			const injector = await web3FromAddress(account.address);
+			console.log(contract.tx);
+			const gasLimit = 3000n * 10000000n;
+			await contract.tx
+			.mint({ value:0, gasLimit })
+			.signAndSend(account.address,{signer: injector.signer}, async(result) => {
+				if (result.status.isInBlock) {
+					console.log('in a block');
+				} else if (result.status.isFinalized) {
+					console.log('finalized');
+					this.collectible.set('id', lastId)
+					await axios.post("/api/add-nft", this.collectible);
+					this.enable();
+				}
+			});
+		}
 	}
 	handleChange = (e) => {
 		this.collectible.set("image", e.target.files[0]);
@@ -64,7 +112,7 @@ export default class Index extends React.PureComponent {
 					(slike se smanjuju na 500x500px)
 				</label>
 				<input onChange={this.handleChange} name="image" type="file"/>
-				<button onClick={this.createCollectible}>Create</button>
+				<button onClick={this.mint}>Create</button>
 				<h2>Your NFT's: </h2>
 				<div className="collectibles">
 				{collectibles&& collectibles.map(collectible => 

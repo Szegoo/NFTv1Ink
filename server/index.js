@@ -9,7 +9,7 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-mongoose.connect(process.env.MONGODB_KEY, {
+mongoose.connect("mongodb+srv://admin:3QdikIRlkVmGXWqd@cluster0.tvffw.mongodb.net/nft?retryWrites=true&w=majority", {
     useNewUrlParser: true, useUnifiedTopology: true
 }).then(() => {
     console.log("connected!");
