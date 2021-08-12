@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/home/sergej/Desktop/flipper/target/ink/release/build/typenum-ba4214303286d4a9/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/home/sergej/Desktop/flipper/target/ink/release/build/typenum-ba4214303286d4a9/out/op.rs
